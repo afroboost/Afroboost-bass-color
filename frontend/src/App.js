@@ -405,7 +405,7 @@ const CoachDashboard = ({ config, onBack, onLogout }) => {
                 />
               </div>
               <div>
-                <label className="block mb-2" style={{ color: config.text_color }}>URL de l'image d'accueil</label>
+                <label className="block mb-2" style={{ color: config.text_color }}>URL de l&apos;image d&apos;accueil</label>
                 <input 
                   type="url" 
                   value={concept.heroImageUrl} 
