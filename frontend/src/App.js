@@ -878,6 +878,22 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   </div>
                 </div>
               )}
+              {/* Favicon URL - Icône de l'onglet navigateur */}
+              <div>
+                <label className="block mb-2 text-white text-sm">URL du Favicon (icône onglet navigateur)</label>
+                <input type="url" value={concept.faviconUrl || ''} onChange={(e) => setConcept({ ...concept, faviconUrl: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg neon-input" placeholder="https://... (favicon .ico/.png)" data-testid="concept-favicon-url" />
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Cette icône apparaît dans l'onglet du navigateur</p>
+              </div>
+              {concept.faviconUrl && (
+                <div className="mt-2">
+                  <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu favicon:</p>
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#1a1a2e' }}>
+                    <img src={concept.faviconUrl} alt="Favicon" style={{ width: '32px', height: '32px' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <span className="text-white text-sm opacity-70">Afroboost</span>
+                  </div>
+                </div>
+              )}
               <button onClick={saveConcept} className="btn-primary px-6 py-3 rounded-lg" data-testid="save-concept">{t('save')}</button>
             </div>
           </div>
