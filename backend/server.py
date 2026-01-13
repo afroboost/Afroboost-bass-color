@@ -152,6 +152,42 @@ class PaymentLinksUpdate(BaseModel):
     twint: Optional[str] = ""
     coachWhatsapp: Optional[str] = ""
 
+# Campaign Models for Marketing Module
+class CampaignResult(BaseModel):
+    contactId: str
+    contactName: str
+    contactEmail: Optional[str] = ""
+    contactPhone: Optional[str] = ""
+    channel: str  # "whatsapp", "email", "instagram"
+    status: str = "pending"  # "pending", "sent", "failed"
+    sentAt: Optional[str] = None
+
+class Campaign(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    message: str
+    mediaUrl: Optional[str] = ""
+    mediaFormat: str = "16:9"  # "9:16" or "16:9"
+    targetType: str = "all"  # "all" or "selected"
+    selectedContacts: List[str] = []
+    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False})
+    scheduledAt: Optional[str] = None  # ISO date or null for immediate
+    status: str = "draft"  # "draft", "scheduled", "sending", "completed"
+    results: List[dict] = []
+    createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updatedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class CampaignCreate(BaseModel):
+    name: str
+    message: str
+    mediaUrl: Optional[str] = ""
+    mediaFormat: str = "16:9"
+    targetType: str = "all"
+    selectedContacts: List[str] = []
+    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False})
+    scheduledAt: Optional[str] = None
+
 class Concept(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = "concept"
