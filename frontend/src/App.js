@@ -430,8 +430,8 @@ const MediaDisplay = ({ url, className }) => {
     height: '100%'
   };
 
-  // Overlay to prevent clicking on YouTube/Vimeo links (keeps user on site)
-  const overlayStyle = {
+  // Full overlay to prevent all interactions with video controls and links
+  const fullOverlayStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -439,7 +439,32 @@ const MediaDisplay = ({ url, className }) => {
     height: '100%',
     zIndex: 10,
     cursor: 'default',
-    background: 'transparent'
+    background: 'transparent',
+    pointerEvents: 'auto'
+  };
+
+  // Top bar overlay to hide YouTube title/logo
+  const topBarOverlayStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '60px',
+    zIndex: 15,
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
+    pointerEvents: 'auto'
+  };
+
+  // Bottom bar overlay to hide YouTube watermark
+  const bottomBarOverlayStyle = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '50px',
+    zIndex: 15,
+    background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
+    pointerEvents: 'auto'
   };
 
   if (media.type === 'youtube') {
@@ -453,8 +478,12 @@ const MediaDisplay = ({ url, className }) => {
           style={contentStyle}
           title="YouTube video"
         />
-        {/* Invisible overlay to block clicks on YouTube logo/title */}
-        <div style={overlayStyle} onClick={(e) => e.preventDefault()} />
+        {/* Top gradient overlay to hide title/logo */}
+        <div style={topBarOverlayStyle} onClick={(e) => e.preventDefault()} />
+        {/* Bottom gradient overlay to hide YouTube watermark */}
+        <div style={bottomBarOverlayStyle} onClick={(e) => e.preventDefault()} />
+        {/* Full overlay to block all clicks */}
+        <div style={fullOverlayStyle} onClick={(e) => e.preventDefault()} />
       </div>
     );
   }
@@ -469,8 +498,10 @@ const MediaDisplay = ({ url, className }) => {
           style={contentStyle}
           title="Vimeo video"
         />
-        {/* Invisible overlay to block clicks */}
-        <div style={overlayStyle} onClick={(e) => e.preventDefault()} />
+        {/* Overlays to block clicks */}
+        <div style={topBarOverlayStyle} onClick={(e) => e.preventDefault()} />
+        <div style={bottomBarOverlayStyle} onClick={(e) => e.preventDefault()} />
+        <div style={fullOverlayStyle} onClick={(e) => e.preventDefault()} />
       </div>
     );
   }
