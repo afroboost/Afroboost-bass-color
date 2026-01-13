@@ -970,27 +970,38 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
   // Format phone number for WhatsApp (ensure country code)
   const formatPhoneForWhatsApp = (phone) => {
     if (!phone) return '';
-    // Remove all non-numeric chars except +
-    let cleaned = phone.replace(/[^\d+]/g, '');
     
-    // If starts with 0, assume Swiss number and add +41
-    if (cleaned.startsWith('0')) {
-      cleaned = '+41' + cleaned.substring(1);
+    // 1. Remove ALL non-numeric characters first (spaces, dashes, dots, parentheses)
+    let cleaned = phone.replace(/[\s\-\.\(\)]/g, '');
+    
+    // 2. Handle + prefix separately
+    const hasPlus = cleaned.startsWith('+');
+    cleaned = cleaned.replace(/[^\d]/g, ''); // Keep only digits
+    
+    // 3. Detect and normalize Swiss numbers
+    if (cleaned.startsWith('0041')) {
+      // Format: 0041XXXXXXXXX -> 41XXXXXXXXX
+      cleaned = cleaned.substring(2);
+    } else if (cleaned.startsWith('41') && cleaned.length >= 11) {
+      // Already has country code 41
+      // Keep as is
+    } else if (cleaned.startsWith('0') && (cleaned.length === 10 || cleaned.length === 9)) {
+      // Swiss local format: 079XXXXXXX or 79XXXXXXX -> 4179XXXXXXX
+      cleaned = '41' + cleaned.substring(1);
+    } else if (!hasPlus && cleaned.length >= 9 && cleaned.length <= 10 && !cleaned.startsWith('41')) {
+      // Assume Swiss number without country code
+      cleaned = '41' + cleaned;
     }
-    // If doesn't start with +, add it
-    if (!cleaned.startsWith('+')) {
-      // Assume Swiss if no country code
-      if (cleaned.length === 9 || cleaned.length === 10) {
-        cleaned = '+41' + cleaned;
-      } else {
-        cleaned = '+' + cleaned;
-      }
+    
+    // 4. Final validation - must have at least 10 digits for international
+    if (cleaned.length < 10) {
+      return '';
     }
-    // Remove the + for WhatsApp API (it expects just numbers)
-    return cleaned.replace('+', '');
+    
+    return cleaned;
   };
 
-  // Generate WhatsApp link with message and image URL at the end for preview
+  // Generate WhatsApp link with message and media URL at the end for link preview
   const generateWhatsAppLink = (phone, message, mediaUrl, contactName) => {
     const firstName = contactName?.split(' ')[0] || contactName || 'ami(e)';
     const personalizedMessage = message
@@ -998,19 +1009,21 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
       .replace(/{prenom}/gi, firstName)
       .replace(/{nom}/gi, contactName || '');
     
-    // Add media URL at the end for WhatsApp preview
+    // CRITICAL: Add media URL at the very end WITHOUT any emoji/text before it
+    // This allows WhatsApp to generate a link preview with thumbnail
     const fullMessage = mediaUrl 
-      ? `${personalizedMessage}\n\n🔗 ${mediaUrl}` 
+      ? `${personalizedMessage}\n\n${mediaUrl}` 
       : personalizedMessage;
     
     const formattedPhone = formatPhoneForWhatsApp(phone);
     
     if (!formattedPhone) {
-      addCampaignLog('whatsapp', `Numéro invalide pour ${contactName}: "${phone}"`, 'error');
+      addCampaignLog('whatsapp', `❌ Numéro invalide pour ${contactName}: "${phone}"`, 'error');
       return null;
     }
     
     const encodedMessage = encodeURIComponent(fullMessage);
+    // Use api.whatsapp.com/send which works better on mobile and desktop
     return `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`;
   };
 
