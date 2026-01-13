@@ -53,18 +53,18 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 
 ## What's Been Implemented (Jan 2026)
 
-### Améliorations de cette session (13 Jan 2026)
-1. ✅ **Cadre Média 16:9**: Format strict 16:9 (paddingBottom: 56.25%) pour YouTube/Vimeo/Image
-2. ✅ **Description du concept**: Textarea modifiable dans l'onglet Concept
-3. ✅ **Icône "i" sur offres**: Affiche description en tooltip au survol/clic
-4. ✅ **Codes promo améliorés**: 
-   - Liste cours dynamique avec scroll interne
-   - Bouton supprimer (🗑️) rouge pour chaque code
-5. ✅ **Splash Screen**: 
-   - Fond noir pur (#000000)
-   - Champ URL logo configurable
-   - PWA manifest créé
-6. ✅ **Vérification fonctionnelle**: Tous les boutons et liens fonctionnels
+### Corrections techniques (13 Jan 2026)
+1. ✅ **Lecteur vidéo étanche 16:9**: 
+   - Paramètres YouTube: `modestbranding=1&rel=0&showinfo=0&controls=0&disablekb=1&fs=0`
+   - Overlays CSS noir en haut (80px) et en bas (70px) pour masquer titre/logo YouTube
+   - Overlay complet pour bloquer tous les clics
+2. ✅ **Description du concept**: 
+   - Textarea dans Mode Coach → sauvegarde via API → rechargement automatique sur la page d'accueil
+   - useEffect avec dépendance `coachMode` pour rafraîchir les données
+3. ✅ **Favicon & Logo dynamique**: 
+   - useEffect qui met à jour `<link rel="icon">` quand `concept.logoUrl` change
+   - Aussi mis à jour pour `apple-touch-icon`
+4. ✅ **Cadre vide**: Condition `{concept.heroImageUrl && concept.heroImageUrl.trim() !== ''}` pour ne rien afficher si vide
 
 ### Tests
 - Backend: 23/23 tests passés (pytest)
