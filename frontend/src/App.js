@@ -1320,6 +1320,20 @@ function App() {
     }
   }, [concept.logoUrl]);
 
+  // Update favicon dynamically when faviconUrl changes
+  useEffect(() => {
+    if (concept.faviconUrl && concept.faviconUrl.trim() !== '') {
+      // Update favicon immediately
+      let link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = concept.faviconUrl;
+    }
+  }, [concept.faviconUrl]);
+
   useEffect(() => { const timer = setTimeout(() => setShowSplash(false), 1500); return () => clearTimeout(timer); }, []);
 
   // LOGIQUE CODE PROMO: Validation en temps réel - Case Insensitive avec trim
