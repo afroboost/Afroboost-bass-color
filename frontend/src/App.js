@@ -1509,36 +1509,33 @@ function App() {
           <form onSubmit={handleSubmit}>
             <div className="form-section rounded-xl p-6 mb-6">
               <h2 className="font-semibold mb-4 text-white" style={{ fontSize: '18px' }}>{t('yourInfo')}</h2>
-              <div className="mb-4">
-                <label className="flex items-center gap-2 cursor-pointer text-white">
-                  <input type="checkbox" checked={isExistingUser} onChange={e => setIsExistingUser(e.target.checked)} data-testid="existing-user-checkbox" />
-                  <span className="text-sm">{t('alreadySubscribed')}</span>
-                </label>
-              </div>
               <div className="space-y-4">
-                {isExistingUser ? (
-                  <select required value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="existing-user-select">
-                    <option value="">{t('selectProfile')}</option>
-                    {uniqueUsers.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
-                  </select>
-                ) : (
-                  <>
-                    <input type="text" required placeholder={t('fullName')} value={userName} onChange={e => setUserName(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-name-input" />
-                    <input type="email" required placeholder={t('emailRequired')} value={userEmail} onChange={e => setUserEmail(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-email-input" />
-                    <input type="tel" required placeholder={t('whatsappRequired')} value={userWhatsapp} onChange={e => setUserWhatsapp(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-whatsapp-input" />
-                  </>
-                )}
-                <input type="text" placeholder={t('promoCode')} value={discountCode} onChange={e => setDiscountCode(e.target.value)}
-                  className={`w-full p-3 rounded-lg ${appliedDiscount ? 'valid-code' : 'neon-input'}`} data-testid="discount-code-input" />
-                {validationMessage && <p className="text-red-500 text-sm font-bold" data-testid="validation-message">{validationMessage}</p>}
+                {/* Private input fields - no email list exposed */}
+                <input type="text" required placeholder={t('fullName')} value={userName} onChange={e => setUserName(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-name-input" autoComplete="name" />
+                <input type="email" required placeholder={t('emailRequired')} value={userEmail} onChange={e => setUserEmail(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-email-input" autoComplete="email" />
+                <input type="tel" required placeholder={t('whatsappRequired')} value={userWhatsapp} onChange={e => setUserWhatsapp(e.target.value)} className="w-full p-3 rounded-lg neon-input" data-testid="user-whatsapp-input" autoComplete="tel" />
                 
+                {/* Promo code input */}
+                <div>
+                  <input type="text" placeholder={t('promoCode')} value={discountCode} onChange={e => setDiscountCode(e.target.value)}
+                    className={`w-full p-3 rounded-lg ${appliedDiscount ? 'valid-code' : 'neon-input'}`} data-testid="discount-code-input" autoComplete="off" />
+                </div>
+                
+                {/* Validation message - error in red, success handled in discount display */}
+                {validationMessage && !appliedDiscount && (
+                  <p className="text-red-400 text-sm font-medium" data-testid="validation-message">{validationMessage}</p>
+                )}
+                
+                {/* Price summary with discount */}
                 <div className="p-4 rounded-lg card-gradient">
                   {appliedDiscount && (
-                    <p className="text-green-400 text-sm mb-1">
-                      ✓ {t('discount')}: {appliedDiscount.type === 'CHF' ? `-${appliedDiscount.value} CHF` : appliedDiscount.type === '100%' ? '100% (Gratuit)' : `-${appliedDiscount.value}%`}
+                    <p className="text-green-400 text-sm mb-2 font-medium" data-testid="discount-applied">
+                      ✅ Code appliqué ! {t('discount')}: {appliedDiscount.type === 'CHF' ? `-${appliedDiscount.value} CHF` : appliedDiscount.type === '100%' ? '100% (Gratuit)' : `-${appliedDiscount.value}%`}
                     </p>
                   )}
-                  <p className="font-bold text-white text-lg" data-testid="total-price">{t('total')}: CHF {totalPrice}</p>
+                  <p className="font-bold text-white text-lg" data-testid="total-price">
+                    {t('total')}: <span style={{ color: appliedDiscount ? '#4ade80' : '#d91cd2' }}>CHF {totalPrice}</span>
+                  </p>
                 </div>
                 
                 <label className="flex items-start gap-2 cursor-pointer text-xs text-white opacity-70">
