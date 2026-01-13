@@ -1205,6 +1205,42 @@ function App() {
 
   useEffect(() => { localStorage.setItem("af_lang", lang); }, [lang]);
 
+  // MÉMORISATION CLIENT: Load saved client info from localStorage on mount
+  useEffect(() => {
+    const savedClient = localStorage.getItem("af_client_info");
+    if (savedClient) {
+      try {
+        const client = JSON.parse(savedClient);
+        // Pre-fill if data exists
+        if (client.name) setUserName(client.name);
+        if (client.email) setUserEmail(client.email);
+        if (client.whatsapp) setUserWhatsapp(client.whatsapp);
+      } catch (e) { console.error("Error loading client info:", e); }
+    }
+  }, []);
+
+  // MÉMORISATION CLIENT: Auto-fill when email matches saved client
+  const handleEmailChange = (email) => {
+    setUserEmail(email);
+    // Check if email matches a saved client
+    const savedClient = localStorage.getItem("af_client_info");
+    if (savedClient && email.length > 3) {
+      try {
+        const client = JSON.parse(savedClient);
+        if (client.email && client.email.toLowerCase() === email.toLowerCase()) {
+          // Auto-fill name and whatsapp
+          if (client.name && !userName) setUserName(client.name);
+          if (client.whatsapp && !userWhatsapp) setUserWhatsapp(client.whatsapp);
+        }
+      } catch (e) { /* ignore */ }
+    }
+  };
+
+  // MÉMORISATION CLIENT: Save client info after successful reservation
+  const saveClientInfo = (name, email, whatsapp) => {
+    localStorage.setItem("af_client_info", JSON.stringify({ name, email, whatsapp }));
+  };
+
   // Fonction pour charger les données
   const fetchData = useCallback(async () => {
     try {
