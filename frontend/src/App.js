@@ -929,10 +929,16 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
           </div>
         )}
         
-        {/* Camera Error */}
+        {/* Camera Error with Retry Button */}
         {cameraError && (
-          <div className="p-3 rounded-lg bg-yellow-600/30 border border-yellow-500 mb-4">
-            <p className="text-yellow-300 text-sm">⚠️ {cameraError}</p>
+          <div className="p-4 rounded-lg bg-yellow-600/30 border border-yellow-500 mb-4">
+            <p className="text-yellow-300 text-sm mb-3">⚠️ {cameraError}</p>
+            <button 
+              onClick={retryCamera}
+              className="w-full py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-sm flex items-center justify-center gap-2"
+            >
+              🔄 Réessayer l'accès caméra
+            </button>
           </div>
         )}
         
@@ -945,7 +951,7 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
               className="rounded-lg overflow-hidden mb-4"
               style={{ 
                 width: '100%', 
-                minHeight: scanning ? '300px' : '0px',
+                minHeight: scanning ? '280px' : '0px',
                 background: scanning ? '#000' : 'transparent'
               }}
             />
