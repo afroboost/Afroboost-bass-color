@@ -149,6 +149,20 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 
 2. ⏳ **Prochaine étape**: Refactoriser App.js en composants séparés
 
+### Fonctionnalités Avis Google (15 Jan 2026)
+1. ✅ **Mode Coach - Champ Lien des avis Google**:
+   - Onglet "Concept & Visuel" - nouveau champ `googleReviewsUrl`
+   - Indicateur visuel "✓ Lien configuré" en vert
+   - Lien "Tester le lien" pour prévisualisation
+   - Persistance via API `/api/concept`
+
+2. ✅ **Mode Client - Bouton "Voir les avis"**:
+   - Positionné entre offres et formulaire
+   - Design néon transparent avec bordure lumineuse rose/violet
+   - Icône étoile + icône lien externe
+   - Ouvre le lien Google dans un nouvel onglet
+   - Masqué si aucun lien configuré
+
 ---
 
 ## Technical Architecture
