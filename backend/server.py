@@ -221,6 +221,7 @@ class Concept(BaseModel):
     logoUrl: str = ""
     faviconUrl: str = ""
     termsText: str = ""  # CGV - Conditions Générales de Vente
+    googleReviewsUrl: str = ""  # Lien avis Google
 
 class ConceptUpdate(BaseModel):
     description: Optional[str] = None
@@ -229,6 +230,7 @@ class ConceptUpdate(BaseModel):
     logoUrl: Optional[str] = None
     faviconUrl: Optional[str] = None
     termsText: Optional[str] = None  # CGV - Conditions Générales de Vente
+    googleReviewsUrl: Optional[str] = None  # Lien avis Google
 
 class AppConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
