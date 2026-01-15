@@ -2107,6 +2107,88 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
     }
   };
 
+  // === EMAILJS FUNCTIONS ===
+  
+  // Sauvegarder la configuration EmailJS
+  const handleSaveEmailJSConfig = () => {
+    const success = saveEmailJSConfig(emailJSConfig);
+    if (success) {
+      setShowEmailJSConfig(false);
+      alert('✅ Configuration EmailJS sauvegardée !');
+    } else {
+      alert('❌ Erreur lors de la sauvegarde');
+    }
+  };
+
+  // Tester la configuration EmailJS
+  const handleTestEmailJS = async () => {
+    if (!testEmailAddress || !testEmailAddress.includes('@')) {
+      alert('Veuillez entrer une adresse email valide pour le test');
+      return;
+    }
+    
+    setTestEmailStatus('sending');
+    const result = await testEmailJSConfig(testEmailAddress);
+    
+    if (result.success) {
+      setTestEmailStatus('success');
+      setTimeout(() => setTestEmailStatus(null), 5000);
+    } else {
+      setTestEmailStatus('error');
+      alert(`❌ Erreur: ${result.error}`);
+      setTimeout(() => setTestEmailStatus(null), 3000);
+    }
+  };
+
+  // Envoyer la campagne email automatiquement
+  const handleSendEmailCampaign = async () => {
+    if (!isEmailJSConfigured()) {
+      alert('⚠️ EmailJS non configuré. Cliquez sur "⚙️ Configurer EmailJS" pour ajouter vos clés.');
+      return;
+    }
+
+    const contacts = getContactsForDirectSend();
+    const emailContacts = contacts
+      .filter(c => c.email && c.email.includes('@'))
+      .map(c => ({ email: c.email, name: c.name }));
+
+    if (emailContacts.length === 0) {
+      alert('Aucun contact avec email valide');
+      return;
+    }
+
+    if (!newCampaign.message.trim()) {
+      alert('Veuillez saisir un message');
+      return;
+    }
+
+    // Confirmation
+    if (!window.confirm(`Envoyer ${emailContacts.length} email(s) automatiquement ?\n\nSujet: ${newCampaign.name || 'Afroboost - Message'}\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    // Réinitialiser les résultats précédents
+    setEmailSendingResults(null);
+    setEmailSendingProgress({ current: 0, total: emailContacts.length, status: 'starting' });
+
+    // Envoyer les emails
+    const results = await sendBulkEmails(
+      emailContacts,
+      {
+        name: newCampaign.name || 'Afroboost - Message',
+        message: newCampaign.message,
+        mediaUrl: newCampaign.mediaUrl
+      },
+      (current, total, status, name) => {
+        setEmailSendingProgress({ current, total, status, name });
+      }
+    );
+
+    // Afficher les résultats
+    setEmailSendingResults(results);
+    setEmailSendingProgress(null);
+  };
+
   // Stats des contacts pour envoi - calcul direct sans fonction
   const contactStats = useMemo(() => {
     const contacts = newCampaign.targetType === "selected" 
