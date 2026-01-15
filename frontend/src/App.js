@@ -3690,6 +3690,172 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
               </div>
             )}
 
+            {/* === PANNEAU AGENT IA WHATSAPP === */}
+            <div className="mb-8 p-5 rounded-xl glass border-2 border-purple-500/50">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  🤖 Agent IA WhatsApp
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${aiConfig.enabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                    {aiConfig.enabled ? '✓ Actif' : 'Inactif'}
+                  </span>
+                </h3>
+                <button 
+                  type="button"
+                  onClick={() => setShowAIConfig(!showAIConfig)}
+                  className="text-xs text-purple-400 hover:text-purple-300"
+                >
+                  {showAIConfig ? '▲ Réduire' : '▼ Configurer'}
+                </button>
+              </div>
+
+              {/* Logs rapides - toujours visible */}
+              {aiLogs.length > 0 && (
+                <div className="mb-4 p-3 rounded-lg bg-black/30 border border-purple-500/20">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-white/60">📝 Dernières réponses IA</span>
+                    <button 
+                      type="button"
+                      onClick={handleClearAILogs}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      🗑️ Effacer
+                    </button>
+                  </div>
+                  <div className="space-y-1 max-h-24 overflow-y-auto">
+                    {aiLogs.slice(0, 3).map((log, idx) => (
+                      <div key={idx} className="text-xs flex items-center gap-2">
+                        <span className="text-purple-400">
+                          {new Date(log.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}
+                        </span>
+                        <span className="text-white/80">{log.clientName || log.fromPhone}</span>
+                        <span className="text-green-400 truncate flex-1">→ {log.aiResponse?.slice(0, 50)}...</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showAIConfig && (
+                <div className="space-y-4">
+                  <p className="text-xs text-white/60 mb-4">
+                    L'Agent IA répond automatiquement aux messages WhatsApp entrants via le webhook Twilio.
+                    Il utilise le contexte des réservations pour personnaliser les réponses.
+                  </p>
+
+                  {/* Toggle Enabled */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-purple-900/20 border border-purple-500/30">
+                    <div>
+                      <span className="text-white font-medium">Activer l'Agent IA</span>
+                      <p className="text-xs text-white/50">Répond automatiquement aux messages WhatsApp</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={aiConfig.enabled}
+                        onChange={e => setAiConfig({...aiConfig, enabled: e.target.checked})}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                  </div>
+
+                  {/* System Prompt */}
+                  <div>
+                    <label className="block mb-2 text-white text-sm">🎯 Prompt Système (Personnalité de l'IA)</label>
+                    <textarea 
+                      value={aiConfig.systemPrompt}
+                      onChange={e => setAiConfig({...aiConfig, systemPrompt: e.target.value})}
+                      className="w-full px-4 py-3 rounded-lg neon-input text-sm"
+                      rows={6}
+                      placeholder="Décrivez la personnalité et le rôle de l'IA..."
+                    />
+                  </div>
+
+                  {/* Model Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-1 text-white text-xs">Provider</label>
+                      <select 
+                        value={aiConfig.provider}
+                        onChange={e => setAiConfig({...aiConfig, provider: e.target.value})}
+                        className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                      >
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                        <option value="google">Google</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-white text-xs">Modèle</label>
+                      <select 
+                        value={aiConfig.model}
+                        onChange={e => setAiConfig({...aiConfig, model: e.target.value})}
+                        className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                      >
+                        <option value="gpt-4o-mini">GPT-4o Mini (rapide)</option>
+                        <option value="gpt-4o">GPT-4o (puissant)</option>
+                        <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Webhook URL */}
+                  <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-500/20">
+                    <p className="text-xs text-white/70">
+                      <strong>🔗 Webhook Twilio :</strong><br/>
+                      Configurez cette URL dans votre console Twilio → Messaging → WhatsApp Sandbox → "When a message comes in":<br/>
+                      <code className="text-blue-400 block mt-1 bg-black/30 px-2 py-1 rounded">
+                        {API}/webhook/whatsapp
+                      </code>
+                    </p>
+                  </div>
+
+                  {/* Test Area */}
+                  <div className="p-3 rounded-lg bg-purple-900/20 border border-purple-500/20">
+                    <p className="text-xs text-white/70 mb-2"><strong>🧪 Tester l'IA</strong></p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text"
+                        value={aiTestMessage}
+                        onChange={e => setAiTestMessage(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg neon-input text-sm"
+                        placeholder="Ex: Quels sont les horaires des cours ?"
+                      />
+                      <button 
+                        type="button"
+                        onClick={handleTestAI}
+                        disabled={aiTestLoading}
+                        className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm disabled:opacity-50"
+                      >
+                        {aiTestLoading ? '⏳' : '🤖 Tester'}
+                      </button>
+                    </div>
+                    {aiTestResponse && (
+                      <div className={`mt-2 p-2 rounded text-sm ${aiTestResponse.success ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300'}`}>
+                        {aiTestResponse.success ? (
+                          <>
+                            <p className="font-medium">Réponse IA ({aiTestResponse.responseTime?.toFixed(2)}s):</p>
+                            <p className="text-white/90 mt-1">{aiTestResponse.response}</p>
+                          </>
+                        ) : (
+                          <p>❌ Erreur: {aiTestResponse.error}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    type="button"
+                    onClick={handleSaveAIConfig}
+                    className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium"
+                  >
+                    💾 Sauvegarder la configuration IA
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* New Campaign Form */}
             <form onSubmit={createCampaign} className="mb-8 p-5 rounded-xl glass">
               <h3 className="text-white font-semibold mb-4">Nouvelle Campagne</h3>
