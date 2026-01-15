@@ -596,6 +596,11 @@ const OfferCard = ({ offer, selected, onClick }) => {
   const [showDescription, setShowDescription] = useState(false);
   const defaultImage = "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop";
   
+  // Utiliser images[0] en priorité, puis thumbnail, puis image par défaut
+  const mainImage = (offer.images && offer.images.length > 0) 
+    ? offer.images[0] 
+    : (offer.thumbnail || defaultImage);
+  
   const toggleDescription = (e) => {
     e.stopPropagation();
     setShowDescription(!showDescription);
@@ -608,7 +613,7 @@ const OfferCard = ({ offer, selected, onClick }) => {
         {!showDescription ? (
           <>
             <img 
-              src={offer.thumbnail || defaultImage} 
+              src={mainImage} 
               alt={offer.name} 
               className="offer-card-image"
               onError={(e) => { e.target.src = defaultImage; }}
