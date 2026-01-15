@@ -1257,59 +1257,15 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
 
   return (
     <div className="w-full min-h-screen p-6 section-gradient">
-      {/* QR Scanner Modal */}
+      {/* QR Scanner Modal with Camera Support */}
       {showScanner && (
-        <div className="modal-overlay" onClick={() => { setShowScanner(false); setScanResult(null); setScanError(null); }}>
-          <div className="modal-content glass rounded-xl p-6 max-w-md w-full neon-border" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-white">📷 Scanner un ticket</h3>
-              <button onClick={() => { setShowScanner(false); setScanResult(null); setScanError(null); }} className="text-2xl text-white hover:text-purple-400">×</button>
-            </div>
-            
-            {/* Success Result */}
-            {scanResult?.success && (
-              <div className="p-4 rounded-lg bg-green-600/30 border border-green-500 mb-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl">✅</span>
-                  <div>
-                    <p className="text-white font-bold text-lg">Ticket validé !</p>
-                    <p className="text-green-300 text-sm">{scanResult.reservation?.userName}</p>
-                    <p className="text-green-300 text-xs">{scanResult.reservation?.reservationCode}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Error */}
-            {scanError && (
-              <div className="p-4 rounded-lg bg-red-600/30 border border-red-500 mb-4">
-                <p className="text-red-300">❌ {scanError}</p>
-              </div>
-            )}
-            
-            {/* Manual code input */}
-            {!scanResult?.success && (
-              <form onSubmit={handleManualValidation} className="space-y-4">
-                <p className="text-white text-sm opacity-70">Entrez le code de réservation manuellement :</p>
-                <input 
-                  type="text" 
-                  name="code"
-                  placeholder="AFR-XXXXXX"
-                  className="w-full px-4 py-3 rounded-lg neon-input uppercase"
-                  autoFocus
-                  data-testid="manual-code-input"
-                />
-                <button type="submit" className="w-full py-3 rounded-lg btn-primary" data-testid="validate-code-btn">
-                  ✓ Valider le ticket
-                </button>
-              </form>
-            )}
-            
-            <p className="text-xs text-white opacity-50 mt-4 text-center">
-              💡 Sur mobile, scannez le QR code du client avec votre appareil photo
-            </p>
-          </div>
-        </div>
+        <QRScannerModal 
+          onClose={() => { setShowScanner(false); setScanResult(null); setScanError(null); }}
+          onValidate={validateReservation}
+          scanResult={scanResult}
+          scanError={scanError}
+          onManualValidation={handleManualValidation}
+        />
       )}
 
       <div className="max-w-6xl mx-auto">
