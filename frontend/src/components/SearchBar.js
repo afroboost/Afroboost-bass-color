@@ -35,13 +35,15 @@ const FILTER_OPTIONS = [
  * @param {string} props.searchQuery - Terme de recherche actuel
  * @param {Function} props.onSearchChange - Callback quand la recherche change
  * @param {boolean} props.showSearch - Afficher ou non la barre de recherche
+ * @param {boolean} props.showFilters - Afficher ou non les boutons de filtre (default: false)
  */
 export const NavigationBar = ({ 
   activeFilter = 'all', 
   onFilterChange, 
   searchQuery = '', 
   onSearchChange,
-  showSearch = true 
+  showSearch = true,
+  showFilters = false  // MASQUÉ PAR DÉFAUT
 }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery);
   
@@ -92,22 +94,23 @@ export const NavigationBar = ({
 
   return (
     <div className="navigation-bar mb-6" data-testid="navigation-bar">
-      {/* Filtres épurés - Style minimaliste comme le bouton globe */}
-      <div 
-        className="filter-chips-container mb-4"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-          flexWrap: 'wrap',
-          padding: '4px 0'
-        }}
-      >
-        {FILTER_OPTIONS.map((filter) => (
-          <button
-            key={filter.id}
-            onClick={() => handleFilterClick(filter.id)}
-            data-testid={`filter-${filter.id}`}
+      {/* Filtres épurés - MASQUÉS par défaut, visibles uniquement si showFilters=true */}
+      {showFilters && (
+        <div 
+          className="filter-chips-container mb-4"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+            padding: '4px 0'
+          }}
+        >
+          {FILTER_OPTIONS.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => handleFilterClick(filter.id)}
+              data-testid={`filter-${filter.id}`}
             className={`filter-chip-minimal ${activeFilter === filter.id ? 'active' : ''}`}
             style={{
               display: 'flex',
