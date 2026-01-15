@@ -816,20 +816,26 @@ const OfferCardSlider = ({ offer, selected, onClick }) => {
   );
 };
 
-// QR Scanner Modal with Camera Support
+// QR Scanner Modal with Camera Support - Enhanced Version
 const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualValidation }) => {
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [manualMode, setManualMode] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState('unknown'); // unknown, granted, denied
+  const [initializingCamera, setInitializingCamera] = useState(false);
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
 
-  // Check camera permissions
+  // Check camera permissions - Enhanced with direct getUserMedia test
   const checkCameraPermission = async () => {
     try {
       // Check if we're on HTTPS (required for camera access)
-      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.hostname.includes('.local');
+      const isSecure = window.location.protocol === 'https:' || isLocalhost;
+      
+      if (!isSecure) {
         setCameraError("Le scan caméra nécessite une connexion HTTPS sécurisée.");
         setManualMode(true);
         return false;
@@ -842,18 +848,18 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
         return false;
       }
 
-      // Try to get permission status
+      // Try to get permission status via Permissions API first
       if (navigator.permissions && navigator.permissions.query) {
         try {
           const result = await navigator.permissions.query({ name: 'camera' });
           setPermissionStatus(result.state);
           if (result.state === 'denied') {
-            setCameraError("L'accès à la caméra a été refusé. Autorisez l'accès dans les paramètres de votre navigateur.");
-            setManualMode(true);
+            setCameraError("L'accès à la caméra a été refusé. Autorisez l'accès dans les paramètres de votre navigateur, puis réessayez.");
             return false;
           }
         } catch (e) {
-          // Permission query not supported, continue anyway
+          // Permission query not supported (e.g., Safari), continue anyway
+          console.log("Permissions API not supported, continuing...");
         }
       }
       return true;
@@ -863,18 +869,48 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
     }
   };
 
-  // Start camera scanning
+  // Direct camera test before using html5-qrcode
+  const testCameraAccess = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      // Successfully got access, stop the stream immediately
+      stream.getTracks().forEach(track => track.stop());
+      return true;
+    } catch (err) {
+      console.error("Direct camera test failed:", err);
+      return false;
+    }
+  };
+
+  // Start camera scanning with enhanced error handling
   const startScanning = async () => {
     setCameraError(null);
+    setInitializingCamera(true);
     
     // Check permissions first
     const canProceed = await checkCameraPermission();
-    if (!canProceed) return;
+    if (!canProceed) {
+      setInitializingCamera(false);
+      return;
+    }
+
+    // Direct camera access test
+    const cameraWorks = await testCameraAccess();
+    if (!cameraWorks) {
+      setCameraError("Impossible d'accéder à la caméra. Vérifiez les permissions et réessayez.");
+      setInitializingCamera(false);
+      return;
+    }
 
     setScanning(true);
+    setInitializingCamera(false);
     
     try {
-      // Make sure the container exists
+      // Wait for the DOM element to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const readerElement = document.getElementById("qr-reader");
       if (!readerElement) {
         throw new Error("Scanner container not found");
@@ -884,61 +920,93 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
       html5QrCodeRef.current = html5QrCode;
       
       // Get available cameras
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras || cameras.length === 0) {
-        throw new Error("Aucune caméra détectée sur cet appareil.");
+      let cameras = [];
+      try {
+        cameras = await Html5Qrcode.getCameras();
+      } catch (camErr) {
+        console.error("Camera enumeration error:", camErr);
+        // Fallback: try with facingMode constraint
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+          handleQrCodeSuccess,
+          () => {}
+        );
+        setPermissionStatus('granted');
+        return;
       }
       
-      // Prefer back camera on mobile
-      const cameraId = cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id;
+      if (!cameras || cameras.length === 0) {
+        // Try facingMode fallback
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+          handleQrCodeSuccess,
+          () => {}
+        );
+        setPermissionStatus('granted');
+        return;
+      }
+      
+      // Prefer back camera on mobile (usually last in list)
+      const backCamera = cameras.find(c => c.label?.toLowerCase().includes('back') || c.label?.toLowerCase().includes('arrière'));
+      const cameraId = backCamera?.id || (cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id);
       
       await html5QrCode.start(
         cameraId,
         {
           fps: 10,
-          qrbox: { width: 220, height: 220 },
+          qrbox: { width: 200, height: 200 },
           aspectRatio: 1.0
         },
-        (decodedText) => {
-          // QR code detected - extract reservation code from URL
-          let code = decodedText;
-          if (decodedText.includes('/validate/')) {
-            code = decodedText.split('/validate/').pop().toUpperCase();
-          } else if (decodedText.includes('AFR-')) {
-            // Extract AFR-XXXXXX pattern
-            const match = decodedText.match(/AFR-[A-Z0-9]+/i);
-            if (match) code = match[0].toUpperCase();
-          }
-          
-          // Stop scanning and validate
-          stopScanning();
-          if (code) {
-            onValidate(code);
-          }
-        },
+        handleQrCodeSuccess,
         () => {} // Ignore scan errors (expected when no QR visible)
       );
       
       setPermissionStatus('granted');
     } catch (err) {
       console.error("Camera error:", err);
-      let errorMessage = "Impossible d'accéder à la caméra.";
-      
-      if (err.message?.includes('Permission')) {
-        errorMessage = "Permission caméra refusée. Autorisez l'accès dans les paramètres.";
-        setPermissionStatus('denied');
-      } else if (err.message?.includes('NotFound') || err.message?.includes('détectée')) {
-        errorMessage = "Aucune caméra détectée sur cet appareil.";
-      } else if (err.message?.includes('NotAllowed')) {
-        errorMessage = "L'accès à la caméra a été bloqué. Vérifiez les permissions.";
-        setPermissionStatus('denied');
-      } else if (err.message?.includes('NotReadable') || err.message?.includes('already in use')) {
-        errorMessage = "La caméra est déjà utilisée par une autre application.";
-      }
-      
-      setCameraError(errorMessage);
+      handleCameraError(err);
       setScanning(false);
     }
+  };
+
+  // Handle QR code detection
+  const handleQrCodeSuccess = (decodedText) => {
+    // QR code detected - extract reservation code from URL
+    let code = decodedText;
+    if (decodedText.includes('/validate/')) {
+      code = decodedText.split('/validate/').pop().toUpperCase();
+    } else if (decodedText.includes('AFR-')) {
+      // Extract AFR-XXXXXX pattern
+      const match = decodedText.match(/AFR-[A-Z0-9]+/i);
+      if (match) code = match[0].toUpperCase();
+    }
+    
+    // Stop scanning and validate
+    stopScanning();
+    if (code) {
+      onValidate(code);
+    }
+  };
+
+  // Handle camera errors with user-friendly messages
+  const handleCameraError = (err) => {
+    const errString = err?.message || err?.toString() || '';
+    let errorMessage = "Impossible d'accéder à la caméra.";
+    
+    if (errString.includes('Permission') || errString.includes('NotAllowed')) {
+      errorMessage = "Permission caméra refusée. Autorisez l'accès dans les paramètres de votre navigateur, puis réessayez.";
+      setPermissionStatus('denied');
+    } else if (errString.includes('NotFound') || errString.includes('détectée') || errString.includes('No video')) {
+      errorMessage = "Aucune caméra détectée sur cet appareil.";
+    } else if (errString.includes('NotReadable') || errString.includes('already in use') || errString.includes('AbortError')) {
+      errorMessage = "La caméra est déjà utilisée. Fermez les autres applications utilisant la caméra et réessayez.";
+    } else if (errString.includes('OverconstrainedError')) {
+      errorMessage = "Votre caméra ne supporte pas les paramètres requis. Essayez un autre appareil.";
+    }
+    
+    setCameraError(errorMessage);
   };
 
   // Retry camera access
@@ -946,7 +1014,7 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
     setCameraError(null);
     setManualMode(false);
     // Small delay before retry
-    setTimeout(() => startScanning(), 500);
+    setTimeout(() => startScanning(), 300);
   };
 
   // Stop camera scanning
