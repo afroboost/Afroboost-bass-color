@@ -1473,11 +1473,58 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
           <div className="card-gradient rounded-xl p-6">
             <h2 className="font-semibold text-white mb-6" style={{ fontSize: '20px' }}>{t('conceptVisual')}</h2>
             <div className="space-y-4">
+              
+              {/* ========================= IDENTITÉ DE L'APPLICATION ========================= */}
+              <div className="border border-pink-500/30 rounded-lg p-4 bg-pink-900/10">
+                <h3 className="text-pink-400 font-semibold mb-4">🎨 Identité de l'application</h3>
+                
+                {/* Nom de l'application */}
+                <div className="mb-4">
+                  <label className="block mb-2 text-white text-sm">📝 Nom de l'application</label>
+                  <input 
+                    type="text" 
+                    value={concept.appName || 'Afroboost'} 
+                    onChange={(e) => setConcept({ ...concept, appName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg neon-input" 
+                    placeholder="Afroboost" 
+                    data-testid="concept-app-name" 
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    Ce nom apparaît comme titre principal en haut du site
+                  </p>
+                </div>
+                
+                {/* Logo URL for Splash Screen & PWA */}
+                <div>
+                  <label className="block mb-2 text-white text-sm">🖼️ URL du Logo (Splash Screen & PWA)</label>
+                  <input 
+                    type="url" 
+                    value={concept.logoUrl || ''} 
+                    onChange={(e) => setConcept({ ...concept, logoUrl: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg neon-input" 
+                    placeholder="https://... (logo PNG/SVG)" 
+                    data-testid="concept-logo-url" 
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    Ce logo apparaît sur le Splash Screen et comme icône d'installation mobile (PWA)
+                  </p>
+                </div>
+                {concept.logoUrl && (
+                  <div className="mt-3">
+                    <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu logo:</p>
+                    <div className="flex justify-center p-4 rounded-lg" style={{ background: '#000' }}>
+                      <img src={concept.logoUrl} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* ========================= DESCRIPTION DU CONCEPT ========================= */}
               <div>
                 <label className="block mb-2 text-white text-sm">{t('conceptDescription')}</label>
                 <textarea value={concept.description} onChange={(e) => setConcept({ ...concept, description: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg neon-input" rows={4} data-testid="concept-description" 
-                  placeholder="Décrivez le concept Afroboost..." />
+                  placeholder="Décrivez votre concept..." />
               </div>
               <div>
                 <label className="block mb-2 text-white text-sm">{t('mediaUrl')}</label>
@@ -1529,20 +1576,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   <MediaDisplay url={concept.heroImageUrl} className="rounded-lg overflow-hidden" />
                 </div>
               )}
-              {/* Logo URL for Splash Screen & PWA */}
-              <div>
-                <label className="block mb-2 text-white text-sm">{t('logoUrl') || 'URL du Logo (Splash Screen & PWA)'}</label>
-                <input type="url" value={concept.logoUrl || ''} onChange={(e) => setConcept({ ...concept, logoUrl: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg neon-input" placeholder="https://... (logo PNG/SVG)" data-testid="concept-logo-url" />
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Ce logo apparaît sur le Splash Screen et comme icône PWA</p>
-              </div>
-              {concept.logoUrl && (
-                <div className="mt-2">
-                  <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu logo:</p>
-                  <div className="flex justify-center p-4 rounded-lg" style={{ background: '#000' }}>
-                    <img src={concept.logoUrl} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px' }} />
-                  </div>
-                </div>
               )}
               {/* Favicon URL - Icône de l'onglet navigateur */}
               <div>
