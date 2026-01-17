@@ -3001,20 +3001,48 @@ function App() {
           )}
         </div>
 
-        {selectedCourse && selectedDate && (
+        {/* =====================================================
+            SECTION OFFRES/SERVICES - Affichée si cours + date sélectionnés
+            ===================================================== */}
+        {selectedCourse && selectedDate && filteredServices.length > 0 && (
           <div id="offers-section" className="mb-8">
             <h2 className="font-semibold mb-2 text-white" style={{ fontSize: '18px' }}>{t('chooseOffer')}</h2>
             
-            {/* Instruction visuelle pour guider l'utilisateur */}
             <p className="text-sm mb-4" style={{ color: '#d91cd2' }}>
               👉 Sélectionnez une offre pour continuer
             </p>
             
-            {/* Horizontal Slider for Offers with LED effect - SWIPE FLUIDE + AUTO-PLAY */}
             <OffersSliderAutoPlay 
-              offers={visibleOffers}
+              offers={filteredServices}
               selectedOffer={selectedOffer}
               onSelectOffer={handleSelectOffer}
+            />
+          </div>
+        )}
+
+        {/* =====================================================
+            SECTION PRODUITS PHYSIQUES - TOUJOURS VISIBLE si produits disponibles
+            Complètement indépendante des cours
+            ===================================================== */}
+        {filteredProducts.length > 0 && (activeFilter === 'shop' || activeFilter === 'all') && (
+          <div id="products-section" className="mb-8">
+            <h2 className="font-semibold mb-2 text-white" style={{ fontSize: '18px' }}>
+              🛒 {t('shop') || 'Boutique'}
+            </h2>
+            
+            <p className="text-sm mb-4" style={{ color: 'rgba(139, 92, 246, 0.8)' }}>
+              Nos produits physiques - livraison disponible
+            </p>
+            
+            <OffersSliderAutoPlay 
+              offers={filteredProducts}
+              selectedOffer={selectedOffer}
+              onSelectOffer={(product) => {
+                // Pour les produits, pas besoin de cours/date
+                setSelectedCourse(null);
+                setSelectedDate(null);
+                handleSelectOffer(product);
+              }}
             />
           </div>
         )}
