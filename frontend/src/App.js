@@ -3018,9 +3018,9 @@ function App() {
           {visibleCourses.length > 0 && (
             <>
               <h2 className="font-semibold mb-4 text-white" style={{ fontSize: '18px' }}>{t('chooseSession')}</h2>
-              {/* Container avec scroll pour mobile */}
+              {/* Container avec scroll pour mobile - scrollbar rose fine 4px */}
               <div 
-                className="space-y-4 custom-scrollbar" 
+                className="space-y-4 sessions-scrollbar" 
                 style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}
               >
                 {visibleCourses.map(course => (
