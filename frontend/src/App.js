@@ -4891,6 +4891,23 @@ function App() {
     // Keep userName, userEmail, userWhatsapp for convenience
   };
 
+  // Sélection d'offre avec smooth scroll vers le formulaire "Vos informations"
+  const handleSelectOffer = (offer) => {
+    setSelectedOffer(offer);
+    
+    // Smooth scroll vers la section "Vos informations" après un court délai
+    // pour laisser le temps au DOM de se mettre à jour
+    setTimeout(() => {
+      const formSection = document.getElementById('user-info-section');
+      if (formSection) {
+        formSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 150);
+  };
+
   const sendWhatsAppNotification = (reservation, isCoach) => {
     const phone = isCoach ? paymentLinks.coachWhatsapp : reservation.userWhatsapp;
     if (!phone?.trim()) return;
