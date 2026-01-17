@@ -504,11 +504,10 @@ const LanguageSelector = ({ lang, setLang }) => {
 };
 
 // Media Display Component (YouTube, Vimeo, Image, Video) - Clean display without dark overlays
-// Media Display Component with Sound Control
+// Media Display Component with Discreet Sound Control
 const MediaDisplay = ({ url, className }) => {
   const [hasError, setHasError] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Muted par défaut (requis pour autoplay)
-  const [showSoundPrompt, setShowSoundPrompt] = useState(true); // Afficher l'invitation à activer le son
+  const [isMuted, setIsMuted] = useState(false); // Son activé par défaut
   const videoRef = useRef(null);
   const iframeRef = useRef(null);
   const media = parseMediaUrl(url);
@@ -519,17 +518,16 @@ const MediaDisplay = ({ url, className }) => {
   // Return null if no valid media URL
   if (!media || !url || url.trim() === '') return null;
 
-  // Toggle mute for video element
+  // Toggle mute
   const toggleMute = () => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
-    setShowSoundPrompt(false); // Cacher l'invitation après le premier clic
     
     if (videoRef.current) {
       videoRef.current.muted = newMuted;
     }
     
-    // Pour YouTube, on doit recharger l'iframe avec le nouveau paramètre mute
+    // Pour YouTube, recharger l'iframe
     if (iframeRef.current && media.type === 'youtube') {
       const currentSrc = iframeRef.current.src;
       const newSrc = currentSrc.replace(/mute=[01]/, `mute=${newMuted ? '1' : '0'}`);
@@ -537,11 +535,11 @@ const MediaDisplay = ({ url, className }) => {
     }
   };
 
-  // 16:9 container wrapper - Clean without dark filters
+  // 16:9 container wrapper
   const containerStyle = {
     position: 'relative',
     width: '100%',
-    paddingBottom: '56.25%', // 16:9 ratio
+    paddingBottom: '56.25%',
     overflow: 'hidden',
     borderRadius: '16px',
     border: '1px solid rgba(217, 28, 210, 0.3)',
@@ -557,52 +555,44 @@ const MediaDisplay = ({ url, className }) => {
     height: '100%'
   };
 
-  // Mute button style - Enhanced visibility
-  const muteButtonStyle = {
+  // Petite icône discrète en bas à droite
+  const smallMuteStyle = {
     position: 'absolute',
-    bottom: '16px',
-    right: '16px',
-    zIndex: 30,
-    minWidth: '50px',
-    height: '50px',
-    borderRadius: '25px',
-    background: isMuted ? 'linear-gradient(135deg, #d91cd2 0%, #8b5cf6 100%)' : 'rgba(0, 0, 0, 0.8)',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
+    bottom: '8px',
+    right: '8px',
+    zIndex: 20,
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    background: 'rgba(0, 0, 0, 0.5)',
+    border: 'none',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px',
-    padding: '0 16px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
     color: '#fff',
-    fontSize: '20px',
-    boxShadow: isMuted ? '0 0 20px rgba(217, 28, 210, 0.6)' : '0 4px 15px rgba(0, 0, 0, 0.5)',
-    animation: showSoundPrompt && isMuted ? 'pulse 2s infinite' : 'none'
+    fontSize: '12px',
+    opacity: 0.6,
+    transition: 'opacity 0.2s'
   };
 
-  // Transparent overlay to prevent clicks without hiding content
+  // Click blocker
   const clickBlockerStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
-    height: 'calc(100% - 70px)', // Leave space for mute button
+    height: 'calc(100% - 40px)',
     zIndex: 10,
     cursor: 'default',
     background: 'transparent',
     pointerEvents: 'auto'
   };
 
-  // Afficher le placeholder si erreur de chargement
   if (hasError) {
     return (
       <div className={className} style={containerStyle} data-testid="media-container-placeholder">
-        <img 
-          src={placeholderUrl} 
-          alt="Afroboost" 
-          style={{ ...contentStyle, objectFit: 'cover' }}
-        />
+        <img src={placeholderUrl} alt="Afroboost" style={{ ...contentStyle, objectFit: 'cover' }}/>
         <div style={{
           position: 'absolute',
           bottom: '10px',
@@ -621,47 +611,28 @@ const MediaDisplay = ({ url, className }) => {
   }
 
   if (media.type === 'youtube') {
-    // YouTube embed - with mute control via URL parameter
     const muteParam = isMuted ? '1' : '0';
     return (
-      <div className={className}>
-        <div style={containerStyle} data-testid="media-container-16-9">
-          <iframe 
-            ref={iframeRef}
-            src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=${muteParam}&loop=1&playlist=${media.id}&modestbranding=1&rel=0&showinfo=0&controls=0&disablekb=1&fs=0&iv_load_policy=3`}
-            frameBorder="0" 
-            allow="autoplay; encrypted-media" 
-            style={contentStyle}
-            title="YouTube video"
-            onError={() => setHasError(true)}
-          />
-          <div style={clickBlockerStyle} onClick={(e) => e.preventDefault()} />
-        </div>
-        {/* Bouton Mute SOUS la vidéo pour YouTube */}
-        <div className="flex justify-center mt-3">
-          <button 
-            onClick={toggleMute} 
-            style={{
-              padding: '10px 24px',
-              borderRadius: '25px',
-              background: isMuted ? 'linear-gradient(135deg, #d91cd2 0%, #8b5cf6 100%)' : 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(217, 28, 210, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: '500',
-              boxShadow: isMuted ? '0 0 15px rgba(217, 28, 210, 0.4)' : 'none'
-            }}
-            data-testid="mute-btn"
-          >
-            {isMuted ? '🔇 Activer le son' : '🔊 Son activé'}
-          </button>
-        </div>
+      <div className={className} style={containerStyle} data-testid="media-container-16-9">
+        <iframe 
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${media.id}?autoplay=1&mute=${muteParam}&loop=1&playlist=${media.id}&modestbranding=1&rel=0&showinfo=0&controls=0&disablekb=1&fs=0&iv_load_policy=3`}
+          frameBorder="0" 
+          allow="autoplay; encrypted-media" 
+          style={contentStyle}
+          title="YouTube video"
+          onError={() => setHasError(true)}
+        />
+        <div style={clickBlockerStyle} onClick={(e) => e.preventDefault()} />
+        <button 
+          onClick={toggleMute} 
+          style={smallMuteStyle}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.6'}
+          data-testid="mute-btn"
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
       </div>
     );
   }
@@ -669,43 +640,25 @@ const MediaDisplay = ({ url, className }) => {
   if (media.type === 'vimeo') {
     const mutedParam = isMuted ? '1' : '0';
     return (
-      <div className={className}>
-        <div style={containerStyle} data-testid="media-container-16-9">
-          <iframe 
-            src={`https://player.vimeo.com/video/${media.id}?autoplay=1&muted=${mutedParam}&loop=1&background=1&title=0&byline=0&portrait=0`}
-            frameBorder="0" 
-            allow="autoplay" 
-            style={contentStyle}
-            title="Vimeo video"
-            onError={() => setHasError(true)}
-          />
-          <div style={clickBlockerStyle} onClick={(e) => e.preventDefault()} />
-        </div>
-        {/* Bouton Mute SOUS la vidéo pour Vimeo */}
-        <div className="flex justify-center mt-3">
-          <button 
-            onClick={toggleMute} 
-            style={{
-              padding: '10px 24px',
-              borderRadius: '25px',
-              background: isMuted ? 'linear-gradient(135deg, #d91cd2 0%, #8b5cf6 100%)' : 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(217, 28, 210, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: '500',
-              boxShadow: isMuted ? '0 0 15px rgba(217, 28, 210, 0.4)' : 'none'
-            }}
-            data-testid="mute-btn"
-          >
-            {isMuted ? '🔇 Activer le son' : '🔊 Son activé'}
-          </button>
-        </div>
+      <div className={className} style={containerStyle} data-testid="media-container-16-9">
+        <iframe 
+          src={`https://player.vimeo.com/video/${media.id}?autoplay=1&muted=${mutedParam}&loop=1&background=1&title=0&byline=0&portrait=0`}
+          frameBorder="0" 
+          allow="autoplay" 
+          style={contentStyle}
+          title="Vimeo video"
+          onError={() => setHasError(true)}
+        />
+        <div style={clickBlockerStyle} onClick={(e) => e.preventDefault()} />
+        <button 
+          onClick={toggleMute} 
+          style={smallMuteStyle}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.6'}
+          data-testid="mute-btn"
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
       </div>
     );
   }
@@ -725,12 +678,12 @@ const MediaDisplay = ({ url, className }) => {
         />
         <button 
           onClick={toggleMute} 
-          style={muteButtonStyle}
-          title={isMuted ? 'Activer le son' : 'Couper le son'}
+          style={smallMuteStyle}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.6'}
           data-testid="mute-btn"
         >
           {isMuted ? '🔇' : '🔊'}
-          {showSoundPrompt && isMuted && <span style={{ fontSize: '12px', fontWeight: '500' }}>Son</span>}
         </button>
       </div>
     );
