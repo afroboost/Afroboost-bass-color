@@ -1576,7 +1576,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   <MediaDisplay url={concept.heroImageUrl} className="rounded-lg overflow-hidden" />
                 </div>
               )}
-              )}
               {/* Favicon URL - Icône de l'onglet navigateur */}
               <div>
                 <label className="block mb-2 text-white text-sm">URL du Favicon (icône onglet navigateur)</label>
@@ -1589,7 +1588,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu favicon:</p>
                   <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#1a1a2e' }}>
                     <img src={concept.faviconUrl} alt="Favicon" style={{ width: '32px', height: '32px' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                    <span className="text-white text-sm opacity-70">Afroboost</span>
+                    <span className="text-white text-sm opacity-70">{concept.appName || 'Afroboost'}</span>
                   </div>
                 </div>
               )}
