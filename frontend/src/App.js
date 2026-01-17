@@ -2678,6 +2678,10 @@ function App() {
         setLastReservation(res.data);
         sendWhatsAppNotification(res.data, true);
         sendWhatsAppNotification(res.data, false);
+        
+        // NOTIFICATION AUTOMATIQUE AU COACH (email + WhatsApp API)
+        notifyCoachAutomatic(res.data);
+        
         setShowSuccess(true);
         resetFormKeepClient();
       } catch (err) { console.error(err); }
