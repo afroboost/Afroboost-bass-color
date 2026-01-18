@@ -2699,36 +2699,121 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
 
             <div className="space-y-2">
               {discountCodes.map(code => (
-                <div key={code.id} className="p-4 rounded-lg flex justify-between items-center flex-wrap gap-3 glass">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="text-white font-bold">{code.code}</span>
-                      <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'rgba(139, 92, 246, 0.3)', color: '#d8b4fe' }}>
-                        {code.type === '100%' ? '100%' : `${code.value}${code.type}`}
-                      </span>
+                <div key={code.id} className="p-4 rounded-lg glass">
+                  {/* Mode édition pour ce code */}
+                  {editingCode?.id === code.id ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-bold">✏️ Modification de {code.code}</span>
+                        <button onClick={() => setEditingCode(null)} className="text-white/50 hover:text-white">×</button>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div>
+                          <label className="block text-white text-xs mb-1 opacity-50">Valeur</label>
+                          <input 
+                            type="number" 
+                            value={editingCode.value} 
+                            onChange={e => setEditingCode({...editingCode, value: parseFloat(e.target.value)})}
+                            className="w-full px-2 py-1 rounded neon-input text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white text-xs mb-1 opacity-50">Max utilisations</label>
+                          <input 
+                            type="number" 
+                            value={editingCode.maxUses || ''} 
+                            onChange={e => setEditingCode({...editingCode, maxUses: e.target.value ? parseInt(e.target.value) : null})}
+                            className="w-full px-2 py-1 rounded neon-input text-sm"
+                            placeholder="Illimité"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white text-xs mb-1 opacity-50">Expiration</label>
+                          <input 
+                            type="date" 
+                            value={editingCode.expiresAt ? editingCode.expiresAt.split('T')[0] : ''} 
+                            onChange={e => setEditingCode({...editingCode, expiresAt: e.target.value || null})}
+                            className="w-full px-2 py-1 rounded neon-input text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white text-xs mb-1 opacity-50">Bénéficiaire</label>
+                          <select 
+                            value={editingCode.assignedEmail || ''} 
+                            onChange={e => setEditingCode({...editingCode, assignedEmail: e.target.value || null})}
+                            className="w-full px-2 py-1 rounded neon-input text-sm"
+                          >
+                            <option value="">Tous</option>
+                            {uniqueCustomers.map((c, i) => (
+                              <option key={i} value={c.email}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 justify-end mt-2">
+                        <button 
+                          onClick={() => setEditingCode(null)}
+                          className="px-3 py-1 rounded text-sm bg-gray-600 text-white"
+                        >
+                          Annuler
+                        </button>
+                        <button 
+                          onClick={() => updateCodeIndividual(code.id, {
+                            value: editingCode.value,
+                            maxUses: editingCode.maxUses,
+                            expiresAt: editingCode.expiresAt,
+                            assignedEmail: editingCode.assignedEmail
+                          })}
+                          className="px-3 py-1 rounded text-sm bg-pink-600 text-white"
+                        >
+                          ✓ Sauvegarder
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-white text-xs opacity-50">
-                      {code.assignedEmail && <span className="mr-3">📧 {code.assignedEmail}</span>}
-                      {code.maxUses && <span className="mr-3">🔢 Max: {code.maxUses}</span>}
-                      {code.expiresAt && <span className="mr-3">📅 {new Date(code.expiresAt).toLocaleDateString()}</span>}
-                      <span>✓ {t('used')}: {code.used || 0}x</span>
+                  ) : (
+                    /* Mode affichage normal */
+                    <div className="flex justify-between items-center flex-wrap gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-white font-bold">{code.code}</span>
+                          <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'rgba(139, 92, 246, 0.3)', color: '#d8b4fe' }}>
+                            {code.type === '100%' ? '100%' : `${code.value}${code.type}`}
+                          </span>
+                        </div>
+                        <div className="text-white text-xs opacity-50">
+                          {code.assignedEmail && <span className="mr-3">📧 {code.assignedEmail}</span>}
+                          {code.maxUses && <span className="mr-3">🔢 Max: {code.maxUses}</span>}
+                          {code.expiresAt && <span className="mr-3">📅 {new Date(code.expiresAt).toLocaleDateString()}</span>}
+                          <span>✓ {t('used')}: {code.used || 0}x</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Edit button */}
+                        <button 
+                          onClick={() => setEditingCode({...code})}
+                          className="px-3 py-2 rounded-lg text-xs font-medium"
+                          style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                          data-testid={`edit-code-${code.id}`}
+                          title="Modifier"
+                        >
+                          ✏️
+                        </button>
+                        <button onClick={() => toggleCode(code)} className={`px-4 py-2 rounded-lg text-xs font-medium ${code.active ? 'bg-green-600' : 'bg-gray-600'}`} style={{ color: 'white' }}>
+                          {code.active ? `✅ ${t('active')}` : `❌ ${t('inactive')}`}
+                        </button>
+                        {/* Delete button - red trash icon */}
+                        <button 
+                          onClick={() => deleteCode(code.id)} 
+                          className="delete-code-btn px-3 py-2 rounded-lg text-xs font-medium"
+                          style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+                          data-testid={`delete-code-${code.id}`}
+                          title={t('delete') || 'Supprimer'}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => toggleCode(code)} className={`px-4 py-2 rounded-lg text-xs font-medium ${code.active ? 'bg-green-600' : 'bg-gray-600'}`} style={{ color: 'white' }}>
-                      {code.active ? `✅ ${t('active')}` : `❌ ${t('inactive')}`}
-                    </button>
-                    {/* Delete button - red trash icon */}
-                    <button 
-                      onClick={() => deleteCode(code.id)} 
-                      className="delete-code-btn px-3 py-2 rounded-lg text-xs font-medium"
-                      style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-                      data-testid={`delete-code-${code.id}`}
-                      title={t('delete') || 'Supprimer'}
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  )}
                 </div>
               ))}
               {discountCodes.length === 0 && <p className="text-center py-8 text-white opacity-50">{t('noPromoCode')}</p>}
