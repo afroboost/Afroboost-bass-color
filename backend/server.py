@@ -1165,8 +1165,9 @@ async def get_coach_subscription():
             "createdAt": datetime.now(timezone.utc).isoformat(),
             "updatedAt": None
         }
-        await db.coach_subscriptions.insert_one(default_sub)
-        return default_sub
+        await db.coach_subscriptions.insert_one(default_sub.copy())  # .copy() pour éviter mutation
+        # Retourner sans _id
+        return {k: v for k, v in default_sub.items() if k != "_id"}
     
     return subscription
 
