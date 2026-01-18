@@ -2101,16 +2101,118 @@ function App() {
     localStorage.setItem("af_client_info", JSON.stringify({ name, email, whatsapp }));
   };
 
-  // Fonction pour charger les données
-  const fetchData = useCallback(async () => {
+  // === SYSTÈME DE CACHE OPTIMISÉ ===
+  // Cache en mémoire avec TTL pour éviter les re-téléchargements inutiles
+  const cacheRef = useRef({
+    courses: { data: null, timestamp: 0 },
+    offers: { data: null, timestamp: 0 },
+    concept: { data: null, timestamp: 0 },
+    paymentLinks: { data: null, timestamp: 0 }
+  });
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  // Vérifier si le cache est valide
+  const isCacheValid = useCallback((key) => {
+    const cached = cacheRef.current[key];
+    return cached.data && (Date.now() - cached.timestamp < CACHE_TTL);
+  }, []);
+
+  // Fonction pour charger les données avec cache
+  const fetchData = useCallback(async (forceRefresh = false) => {
     try {
-      const [crs, off, usr, lnk, cpt, cds] = await Promise.all([
-        axios.get(`${API}/courses`), axios.get(`${API}/offers`), axios.get(`${API}/users`),
-        axios.get(`${API}/payment-links`), axios.get(`${API}/concept`), axios.get(`${API}/discount-codes`)
-      ]);
-      setCourses(crs.data); setOffers(off.data); setUsers(usr.data);
-      setPaymentLinks(lnk.data); setConcept(cpt.data); setDiscountCodes(cds.data);
+      // Utiliser le cache si disponible et pas de force refresh
+      const cachedCourses = !forceRefresh && isCacheValid('courses') ? cacheRef.current.courses.data : null;
+      const cachedOffers = !forceRefresh && isCacheValid('offers') ? cacheRef.current.offers.data : null;
+      const cachedConcept = !forceRefresh && isCacheValid('concept') ? cacheRef.current.concept.data : null;
+      const cachedLinks = !forceRefresh && isCacheValid('paymentLinks') ? cacheRef.current.paymentLinks.data : null;
+
+      // Construire les requêtes uniquement pour les données non cachées
+      const requests = [];
+      const requestMap = {};
+
+      if (!cachedCourses) {
+        requestMap.courses = requests.length;
+        requests.push(axios.get(`${API}/courses`));
+      }
+      if (!cachedOffers) {
+        requestMap.offers = requests.length;
+        requests.push(axios.get(`${API}/offers`));
+      }
+      if (!cachedLinks) {
+        requestMap.links = requests.length;
+        requests.push(axios.get(`${API}/payment-links`));
+      }
+      if (!cachedConcept) {
+        requestMap.concept = requests.length;
+        requests.push(axios.get(`${API}/concept`));
+      }
+
+      // Toujours récupérer users et discount codes (données dynamiques)
+      requestMap.users = requests.length;
+      requests.push(axios.get(`${API}/users`));
+      requestMap.codes = requests.length;
+      requests.push(axios.get(`${API}/discount-codes`));
+
+      const responses = await Promise.all(requests);
+
+      // Mettre à jour le cache et les états
+      const now = Date.now();
+
+      if (cachedCourses) {
+        setCourses(cachedCourses);
+      } else if (requestMap.courses !== undefined) {
+        const coursesData = responses[requestMap.courses].data;
+        cacheRef.current.courses = { data: coursesData, timestamp: now };
+        setCourses(coursesData);
+      }
+
+      if (cachedOffers) {
+        setOffers(cachedOffers);
+      } else if (requestMap.offers !== undefined) {
+        const offersData = responses[requestMap.offers].data;
+        cacheRef.current.offers = { data: offersData, timestamp: now };
+        setOffers(offersData);
+      }
+
+      if (cachedLinks) {
+        setPaymentLinks(cachedLinks);
+      } else if (requestMap.links !== undefined) {
+        const linksData = responses[requestMap.links].data;
+        cacheRef.current.paymentLinks = { data: linksData, timestamp: now };
+        setPaymentLinks(linksData);
+      }
+
+      if (cachedConcept) {
+        setConcept(cachedConcept);
+      } else if (requestMap.concept !== undefined) {
+        const conceptData = responses[requestMap.concept].data;
+        cacheRef.current.concept = { data: conceptData, timestamp: now };
+        setConcept(conceptData);
+      }
+
+      // Données dynamiques (toujours rafraîchies)
+      if (requestMap.users !== undefined) {
+        setUsers(responses[requestMap.users].data);
+      }
+      if (requestMap.codes !== undefined) {
+        setDiscountCodes(responses[requestMap.codes].data);
+      }
+
+      console.log(`📦 Cache: ${cachedCourses ? '✓' : '↓'}courses ${cachedOffers ? '✓' : '↓'}offers ${cachedConcept ? '✓' : '↓'}concept`);
+
     } catch (err) { console.error("Error:", err); }
+  }, [isCacheValid]);
+
+  // Invalider le cache (appelé après modifications dans CoachDashboard)
+  const invalidateDataCache = useCallback((key) => {
+    if (key) {
+      cacheRef.current[key] = { data: null, timestamp: 0 };
+    } else {
+      // Invalider tout le cache
+      Object.keys(cacheRef.current).forEach(k => {
+        cacheRef.current[k] = { data: null, timestamp: 0 };
+      });
+    }
   }, []);
 
   // Charger les données au démarrage
@@ -2118,12 +2220,14 @@ function App() {
     fetchData();
   }, [fetchData]);
 
-  // Recharger les données quand on sort du Mode Coach
+  // Recharger les données quand on sort du Mode Coach (avec force refresh)
   useEffect(() => {
     if (!coachMode) {
-      fetchData();
+      // Invalider le cache quand on sort du mode coach car des modifications ont pu être faites
+      invalidateDataCache();
+      fetchData(true);
     }
-  }, [coachMode, fetchData]);
+  }, [coachMode, fetchData, invalidateDataCache]);
 
   // Afficher le popup Affiche Événement si activé
   useEffect(() => {
