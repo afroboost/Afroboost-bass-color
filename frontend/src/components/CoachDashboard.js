@@ -2563,7 +2563,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
             )}
             
             <form onSubmit={addCode} className="mb-6 p-4 rounded-lg glass">
-              {/* Toggle Mode Série */}
+              {/* Toggle Mode Série + Bouton Nettoyage */}
               <div className="flex items-center justify-between mb-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input 
@@ -2575,9 +2575,22 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   />
                   <span className="text-white font-medium">{t('batchGeneration')}</span>
                 </label>
-                {isBatchMode && (
-                  <span className="text-xs text-purple-300 opacity-70">{t('batchMax')}</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {isBatchMode && (
+                    <span className="text-xs text-purple-300 opacity-70">{t('batchMax')}</span>
+                  )}
+                  {/* Bouton nettoyage des données fantômes */}
+                  <button 
+                    type="button"
+                    onClick={manualSanitize}
+                    className="px-3 py-1 rounded-lg text-xs"
+                    style={{ background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.4)' }}
+                    title="Nettoyer les données fantômes (articles/contacts supprimés)"
+                    data-testid="sanitize-btn"
+                  >
+                    🧹 Nettoyer
+                  </button>
+                </div>
               </div>
               
               {/* Champs de génération en série (visibles uniquement si mode série activé) */}
