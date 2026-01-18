@@ -1486,7 +1486,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-          <h1 className="font-bold text-white" style={{ fontSize: '28px' }}>{t('coachMode')}</h1>
+          <div>
+            <h1 className="font-bold text-white" style={{ fontSize: '28px' }}>{t('coachMode')}</h1>
+            {/* Affichage de l'utilisateur connecté via Google OAuth */}
+            {coachUser && (
+              <div className="flex items-center gap-2 mt-2">
+                {coachUser.picture && (
+                  <img 
+                    src={coachUser.picture} 
+                    alt={coachUser.name} 
+                    className="w-6 h-6 rounded-full"
+                    style={{ border: '2px solid #d91cd2' }}
+                  />
+                )}
+                <span className="text-white/60 text-sm">
+                  Connecté en tant que <span className="text-purple-400">{coachUser.email}</span>
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex gap-3">
             <button onClick={onBack} className="px-4 py-2 rounded-lg glass text-white text-sm" data-testid="coach-back">{t('back')}</button>
             <button onClick={onLogout} className="px-4 py-2 rounded-lg glass text-white text-sm" data-testid="coach-logout">{t('logout')}</button>
