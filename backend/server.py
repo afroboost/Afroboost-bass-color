@@ -10,20 +10,13 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
-
-# Emergent Stripe integration
-from emergentintegrations.payments.stripe.checkout import (
-    StripeCheckout, 
-    CheckoutSessionRequest, 
-    CheckoutSessionResponse,
-    CheckoutStatusResponse
-)
+import stripe
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Stripe configuration
-STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+# Stripe configuration - utilise la variable d'environnement existante
+stripe.api_key = os.environ.get('STRIPE_API_KEY')
 
 # MongoDB connection - with fallback for production environments
 mongo_url = os.environ.get('MONGO_URL')
