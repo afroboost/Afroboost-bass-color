@@ -2184,7 +2184,6 @@ function App() {
         const reservation = JSON.parse(pendingReservationData);
         
         // AFFICHER LE TICKET IMMÉDIATEMENT avec les données locales
-        // Cela garantit que le ticket apparaît même si l'API est lente ou échoue
         const tempTicketData = {
           ...reservation,
           reservationCode: `AF-${Date.now().toString(36).toUpperCase()}`,
@@ -2193,6 +2192,9 @@ function App() {
         };
         setLastReservation(tempTicketData);
         setShowSuccess(true); // TICKET VISIBLE IMMÉDIATEMENT
+        
+        // SAUVEGARDER LE TICKET dans localStorage pour persistance
+        saveTicketToStorage(tempTicketData);
         
         // Ensuite, finaliser en arrière-plan
         const finalizeReservation = async () => {
@@ -2221,13 +2223,15 @@ function App() {
             // Mettre à jour le ticket avec le vrai code de réservation
             setLastReservation(res.data);
             
+            // METTRE À JOUR le ticket sauvegardé avec les vraies données
+            saveTicketToStorage(res.data);
+            
             // Nettoyer localStorage après succès
             localStorage.removeItem('pendingReservation');
             
           } catch (err) {
             console.error("Error saving reservation to database:", err);
-            // Le ticket est déjà affiché, pas besoin de le cacher
-            // Sauvegarder localement pour retry ultérieur
+            // Le ticket est déjà affiché et sauvegardé
             localStorage.setItem("failedReservation", JSON.stringify({
               ...reservation,
               stripeSessionId: sessionId,
@@ -2242,14 +2246,18 @@ function App() {
         // Pas de réservation en attente - peut-être un refresh
         // Créer un ticket minimal avec le session_id
         console.log("No pending reservation, creating minimal ticket for session:", sessionId);
-        setLastReservation({
+        const minimalTicket = {
           reservationCode: `AF-${sessionId.slice(-8).toUpperCase()}`,
           stripeSessionId: sessionId,
           paymentStatus: 'paid',
           courseName: 'Réservation Afroboost',
           totalPrice: '-'
-        });
+        };
+        setLastReservation(minimalTicket);
         setShowSuccess(true);
+        
+        // Sauvegarder même le ticket minimal
+        saveTicketToStorage(minimalTicket);
       }
       
       // Nettoyer l'URL APRÈS affichage du ticket
