@@ -2121,7 +2121,7 @@ function App() {
     };
     
     if (paymentSuccess === 'true' && sessionId) {
-      // Paiement réussi - finaliser la réservation
+      // Paiement réussi - finaliser la réservation et afficher le TICKET avec QR code
       const pendingReservationData = localStorage.getItem('pendingReservation');
       if (pendingReservationData) {
         const reservation = JSON.parse(pendingReservationData);
@@ -2133,7 +2133,7 @@ function App() {
             const statusResponse = await axios.get(`${API}/checkout-status/${sessionId}`);
             
             if (statusResponse.data.paymentStatus === 'paid' || statusResponse.data.status === 'complete') {
-              // Créer la réservation
+              // Créer la réservation avec le session_id Stripe
               const res = await axios.post(`${API}/reservations`, {
                 ...reservation,
                 stripeSessionId: sessionId,
@@ -2155,19 +2155,46 @@ function App() {
               // Nettoyer
               localStorage.removeItem('pendingReservation');
               
-              // Afficher la PAGE de succès paiement (plein écran)
+              // AFFICHER DIRECTEMENT LE TICKET avec QR Code (SuccessOverlay)
               setLastReservation(res.data);
-              setShowPaymentSuccessPage(true);
+              setShowSuccess(true); // Affiche le ticket avec QR Code instantanément
+            } else {
+              // Paiement non encore confirmé - réessayer dans quelques secondes
+              console.log("Payment not yet confirmed, status:", statusResponse.data);
+              // Afficher quand même le ticket si la réservation existe
+              const res = await axios.post(`${API}/reservations`, {
+                ...reservation,
+                stripeSessionId: sessionId,
+                paymentStatus: 'pending'
+              });
+              localStorage.removeItem('pendingReservation');
+              setLastReservation(res.data);
+              setShowSuccess(true);
             }
           } catch (err) {
             console.error("Error finalizing reservation:", err);
-            // En cas d'erreur, afficher quand même un message
-            setValidationMessage("Paiement reçu, mais erreur lors de la finalisation. Veuillez nous contacter.");
-            setTimeout(() => setValidationMessage(""), 5000);
+            // En cas d'erreur API, créer la réservation quand même avec le session_id
+            try {
+              const res = await axios.post(`${API}/reservations`, {
+                ...reservation,
+                stripeSessionId: sessionId,
+                paymentStatus: 'pending_verification'
+              });
+              localStorage.removeItem('pendingReservation');
+              setLastReservation(res.data);
+              setShowSuccess(true); // Afficher le ticket malgré l'erreur
+            } catch (reservationErr) {
+              setValidationMessage("Paiement reçu, mais erreur lors de la création du ticket. Veuillez nous contacter.");
+              setTimeout(() => setValidationMessage(""), 5000);
+            }
           }
         };
         
         finalizeReservation();
+      } else {
+        // Pas de réservation en attente mais session_id présent
+        // Cela peut arriver si l'utilisateur rafraîchit la page
+        console.log("No pending reservation found for session:", sessionId);
       }
       cleanUrl();
     } else if (paymentCanceled === 'true') {
