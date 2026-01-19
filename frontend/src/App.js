@@ -3896,6 +3896,25 @@ function App() {
         {/* Indicateur de scroll pour les nouveaux utilisateurs */}
         <ScrollIndicator show={showScrollIndicator && !coachMode && !showSplash} />
         
+        {/* Bouton flottant "Voir mon dernier ticket" */}
+        {hasSavedTicket && !showSuccess && !coachMode && (
+          <button
+            onClick={showSavedTicket}
+            className="fixed z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105"
+            style={{
+              bottom: '100px',
+              right: '20px',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+              border: '2px solid rgba(255, 255, 255, 0.2)'
+            }}
+            data-testid="view-saved-ticket-btn"
+          >
+            <span className="text-lg">🎫</span>
+            <span className="text-white font-semibold text-sm">Mon ticket</span>
+          </button>
+        )}
+        
         {/* Widget Chat IA flottant */}
         <ChatWidget />
       </div>
