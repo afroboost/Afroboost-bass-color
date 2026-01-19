@@ -3054,6 +3054,19 @@ function App() {
 
       {showConfirmPayment && <ConfirmPaymentOverlay t={t} onConfirm={confirmPayment} onCancel={() => { setShowConfirmPayment(false); setPendingReservation(null); }} />}
       {showSuccess && lastReservation && <SuccessOverlay t={t} data={lastReservation} onClose={() => setShowSuccess(false)} />}
+      
+      {/* Page de succès paiement Stripe (plein écran) */}
+      {showPaymentSuccessPage && lastReservation && (
+        <PaymentSuccessPage 
+          reservation={lastReservation} 
+          t={t}
+          onClose={() => {
+            setShowPaymentSuccessPage(false);
+            // Optionnel: Afficher aussi l'overlay ticket pour permettre le téléchargement
+            setShowSuccess(true);
+          }} 
+        />
+      )}
 
       <div className="max-w-4xl mx-auto pt-12">
         <div className="text-center mb-8">
